@@ -86,12 +86,12 @@ public class AdminChatBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "ArmUtdBot";
+        return "";
     }
 
     @Override
     public String getBotToken() {
-        return "bot_token";
+        return "";
     }
 }
 
