@@ -50,19 +50,22 @@ public class CommandProcessor {
     }
     */
     public String processHelpAdm(int src_group) {
-        if (src_group == 0) {
-            return "Недостаточно прав!";
+        if (src_group < 2) {
+            return "❌ Недостаточно прав!";
         }
         if (src_group >= 2) {
             return "Список доступных команд:\n\n" +
-                    "*help — список всех команд\n" +
-                    "*all — отмечает всех участников беседы\n" +
-                    "*up — повышение уровня доступа\n" +
-                    "*up_tag — повышение уровня доступа с помощью тега\n" +
-                    "*dup — понижение уровня доступа\n" +
-                    "*dup_tag — понижение уровня доступа с помощью тега\n" +
-                    "*reset — сброс уровня доступа\n" +
-                    "*reset_tag — сброс уровня доступа с помощью тега\n" +
+                    "*help — список всех команд.\n" +
+                    "*all — отмечает всех участников беседы.\n" +
+                    "*add_goal — добавляет голы к определённому пользователю.\n" +
+                    "*add_assist — добавляет ассисты к определённому пользователю.\n" +
+                    "*add_user — добавляет пользователя в базу данных.\n" +
+                    "*up — повышение уровня доступа.\n" +
+                    "*up_tag — повышение уровня доступа с помощью тега.\n" +
+                    "*dup — понижение уровня доступа.\n" +
+                    "*dup_tag — понижение уровня доступа с помощью тега.\n" +
+                    "*reset — сброс уровня доступа.\n" +
+                    "*reset_tag — сброс уровня доступа с помощью тега.\n" +
                     "*src — просмотр уровней доступа участников.\n\n" +
                     "Если возникли какие-либо вопросы или нашли баг/опечатку обращайтесь! — https://t.me/heza4to\n\n" +
 
@@ -76,6 +79,8 @@ public class CommandProcessor {
         return "Список доступных команд:\n\n" +
                 "*help — список всех команд.\n" +
                 "*bosses — список главных участников команды.\n" +
+                "*stats — вывод статистики игроков.\n" +
+
 
                 "Если возникли какие-либо вопросы или нашли баг/опечатку обращайтесь! — https://t.me/heza4to\n\n" +
 
@@ -85,7 +90,7 @@ public class CommandProcessor {
 
     public String processlistUsers(int src_group) {
         if (src_group == 1) {
-            return "Недостаточно прав!";
+            return "❌ Недостаточно прав!";
         }
         StringBuilder userList = new StringBuilder();
         try (Connection connection = commandHandler.getConnection();
@@ -150,20 +155,33 @@ public class CommandProcessor {
 
         // Проверка прав доступа
         if (src_group != 3) {
-            return "Недостаточно прав для выполнения операции.";
+            return "❌ Недостаточно прав для выполнения операции.";
+        }
+
+        // Проверка, существует ли пользователь в базе данных
+        try (Connection connection = commandHandler.getConnection();
+             PreparedStatement checkStatement = connection.prepareStatement("SELECT COUNT(*) FROM tags WHERE tg_tag = ?")) {
+            checkStatement.setString(1, tag);
+            ResultSet resultSet = checkStatement.executeQuery();
+            if (resultSet.next() && resultSet.getInt(1) > 0) {
+                return "❌ Пользователь с таким тегом уже существует в базе данных.";
+            }
+        } catch (SQLException e) {
+            return "Ошибка при проверке пользователя: " + e.getMessage();
         }
 
         // Выполняем вставку в базу данных
         try (Connection connection = commandHandler.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO tags (tg_tag, names) VALUES (?, ?)")) {
+             PreparedStatement statement = connection.prepareStatement("INSERT INTO tags (tg_tag, names) VALUES (?, ?)");) {
             statement.setString(1, tag);   // Тег пользователя
             statement.setString(2, name);  // Имя пользователя
             statement.executeUpdate();
-            return "Пользователь добавлен в базу данных.";
+            return "✅ Пользователь добавлен в базу данных.";
         } catch (SQLException e) {
             return "Ошибка при добавлении пользователя: " + e.getMessage();
         }
     }
+
 
 
     public String processUpGroup(String[] args, long userId, int src_group) {
@@ -185,7 +203,7 @@ public class CommandProcessor {
                 upgradeGroup(userToBeUpgradedId);
                 return "Уровень доступа пользователя повышен.";
             } else {
-                return "Тебе такая команда недоступна.";
+                return "❌ Тебе такая команда недоступна.";
             }
         } else {
             return "Неверный формат команды *up. Используйте *up [ID]";
@@ -212,7 +230,7 @@ public class CommandProcessor {
                 upgradeGroupTag(userToBeUpgradedTag); // Понижаем уровень доступа
                 return "Уровень доступа пользователя повышен.";
             } else {
-                return "Тебе такая команда недоступна.";
+                return "❌ Тебе такая команда недоступна.";
             }
         } else {
             return "Неверный формат команды *dup. Используйте *up_tag [user TAG]";
@@ -260,7 +278,7 @@ public class CommandProcessor {
                 resetGroup(userToBeUpgradedId);
                 return "Уровень доступа пользователя был сброшен.";
             } else {
-                return "Тебе такая команда недоступна.";
+                return "❌ Тебе такая команда недоступна.";
             }
         } else {
             return "Неверный формат команды *reset. Используйте *reset [ID]";
@@ -284,7 +302,7 @@ public class CommandProcessor {
                 resetGroupTag(userToBeUpgradedTag); // Сбрасываем уровень доступа
                 return "Уровень доступа пользователя сброшен.";
             } else {
-                return "Тебе такая команда недоступна.";
+                return "❌ Тебе такая команда недоступна.";
             }
         } else {
             return "Неверный формат команды *dup. Используйте *reset_tag [user TAG]";
@@ -319,7 +337,7 @@ public class CommandProcessor {
                 dupgradeGroup(userToBeUpgradedId);
                 return "Уровень доступа пользователя понижен.";
             } else {
-                return "Тебе такая команда недоступна.";
+                return "❌ Тебе такая команда недоступна.";
             }
         } else {
             return "Неверный формат команды *dup. Используйте *dup [ID]";
@@ -337,11 +355,105 @@ public class CommandProcessor {
                 dupgradeGroupTag(userToBeUpgradedTag); // Понижаем уровень доступа
                 return "Уровень доступа пользователя понижен.";
             } else {
-                return "Тебе такая команда недоступна.";
+                return "❌ Тебе такая команда недоступна.";
             }
         } else {
             return "Неверный формат команды *dup. Используйте *dup_tag [user TAG]";
         }
+    }
+
+    public String processAddGoal(String[] args, int src_group) {
+        if (args.length != 2){
+            return "❌ Неверный формат команды. Используй *add_goal [user TAG] [Кол-во голов]";
+        }
+
+        String tag = args[0];
+        int goals;
+
+        try {
+            goals = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            return "❌ Некорректное значение голов. Введите число.";
+        }
+
+        if (src_group != 3) {
+            return "❌ Недостаточно прав для выполнения операции.";
+        }
+
+        try (Connection connection = commandHandler.getConnection();
+             PreparedStatement updateGoalStatement = connection.prepareStatement(
+                     "UPDATE stats SET goal = goal + ? WHERE user_tag = ?")) {
+            updateGoalStatement.setInt(1, goals);
+            updateGoalStatement.setString(2, tag);
+            int rowsUpdated = updateGoalStatement.executeUpdate();
+            if (rowsUpdated > 0) {
+                return "✅ Количество голов пользователя обновлено.";
+            } else {
+                return "⚠️ Пользователь не найден в базе данных.";
+            }
+        } catch (SQLException e) {
+            return "Ошибка при обновлении пользователя: " + e.getMessage();
+        }
+    }
+
+
+    public String processAddAssist(String[] args, int src_group) {
+        if (args.length != 2){
+            return "❌ Неверный формат команды. Используй *add_assist [user TAG] [Кол-во ассистов]";
+        }
+
+        String tag = args[0];
+        int goals;
+
+        try {
+            goals = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            return "❌ Некорректное значение ассистов. Введите число.";
+        }
+
+        if (src_group != 3) {
+            return "❌ Недостаточно прав для выполнения операции.";
+        }
+
+        try (Connection connection = commandHandler.getConnection();
+             PreparedStatement updateGoalStatement = connection.prepareStatement(
+                     "UPDATE stats SET assist = assist + ? WHERE user_tag = ?")) {
+            updateGoalStatement.setInt(1, goals);
+            updateGoalStatement.setString(2, tag);
+            int rowsUpdated = updateGoalStatement.executeUpdate();
+            if (rowsUpdated > 0) {
+                return "✅ Количество ассистов пользователя обновлено.";
+            } else {
+                return "⚠️ Пользователь не найден в базе данных.";
+            }
+        } catch (SQLException e) {
+            return "Ошибка при обновлении пользователя: " + e.getMessage();
+        }
+    }
+
+
+    public String getPlayerStats() {
+        StringBuilder result = new StringBuilder("📊 Статистика игроков:\n");
+
+        try (Connection connection = commandHandler.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT user_tag, goal, assist, goal + assist AS ga FROM stats ORDER BY ga DESC");
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                String tag = resultSet.getString("user_tag");
+                int goals = resultSet.getInt("goal");
+                int assists = resultSet.getInt("assist");
+                int ga = resultSet.getInt("ga");
+
+                result.append(String.format("%s | G: %d | A: %d | G+A: %d\n", tag, goals, assists, ga));
+            }
+
+        } catch (SQLException e) {
+            return "Ошибка при получении статистики: " + e.getMessage();
+        }
+
+        return result.toString();
     }
 
 
