@@ -32,16 +32,10 @@ public class CommandHandler {
             case "*all":
                 return commandProcessor.processlistUsers(src_group);
             case "*up":
-                return commandProcessor.processUpGroup(args, userId, src_group);
-            case "*up_tag":
                 return commandProcessor.processUpGroupTag(args, userId, src_group);
             case "*dup":
-                return commandProcessor.processDUpGroup(args, userId, src_group);
-            case "*dup_tag":
                 return commandProcessor.processDUpGroupTag(args, src_group);
             case "*reset":
-                return commandProcessor.processResetGroup(args, userId, src_group);
-            case "*reset_tag":
                 return commandProcessor.processResetGroupTag(args, userId, src_group);
             case "*bosses":
                 return commandProcessor.processBossList();

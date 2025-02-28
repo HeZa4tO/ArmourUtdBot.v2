@@ -1,24 +1,6 @@
 package Command;
 
-import com.pengrad.telegrambot.TelegramBot;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-
-import java.util.ArrayList;
-import java.util.List;
-
-
 import java.sql.*;
-import java.sql.*;
-
-
-import static javassist.bytecode.SyntheticAttribute.tag;
 import static org.example.AdminChatBot.*;
 
 public class CommandProcessor {
@@ -60,11 +42,13 @@ public class CommandProcessor {
         }
     }
     */
+
+
     public String processHelpAdm(int src_group) {
         if (src_group < 2) {
             return "❌ Недостаточно прав!";
         }
-        if (src_group >= 2) {
+        if (src_group > 2) {
             return "Список доступных команд:\n\n" +
                     "*help — список всех команд.\n" +
                     "*all — отмечает всех участников беседы.\n" +
@@ -72,11 +56,8 @@ public class CommandProcessor {
                     "*add_assist — добавляет ассисты к определённому пользователю.\n" +
                     "*add_user — добавляет пользователя в базу данных.\n" +
                     "*up — повышение уровня доступа.\n" +
-                    "*up_tag — повышение уровня доступа с помощью тега.\n" +
                     "*dup — понижение уровня доступа.\n" +
-                    "*dup_tag — понижение уровня доступа с помощью тега.\n" +
                     "*reset — сброс уровня доступа.\n" +
-                    "*reset_tag — сброс уровня доступа с помощью тега.\n" +
                     "*src — просмотр уровней доступа участников.\n\n" +
                     "Если возникли какие-либо вопросы или нашли баг/опечатку обращайтесь! — https://t.me/heza4to\n\n" +
 
@@ -85,6 +66,7 @@ public class CommandProcessor {
             return "Неизвестная команда.";
         }
     }
+
 
     public String processHelp() {
         return "Список доступных команд:\n\n" +
@@ -123,6 +105,7 @@ public class CommandProcessor {
         }
         return userList.toString();
     }
+
 
     public String processBossList() {
         StringBuilder userList = new StringBuilder();
@@ -183,7 +166,7 @@ public class CommandProcessor {
 
         // Выполняем вставку в базу данных
         try (Connection connection = commandHandler.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO tags (tg_tag, names) VALUES (?, ?)");) {
+             PreparedStatement statement = connection.prepareStatement("INSERT INTO tags (tg_tag, names) VALUES (?, ?)")) {
             statement.setString(1, tag);   // Тег пользователя
             statement.setString(2, name);  // Имя пользователя
             statement.executeUpdate();
@@ -221,6 +204,7 @@ public class CommandProcessor {
         }
     }
 
+
     private void upgradeGroup(long userToBeUpgradedId) {
         try (Connection connection = commandHandler.getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE \"tags\" SET src_group = src_group + 1 WHERE tg_id = ?")) {
             statement.setLong(1, userToBeUpgradedId);
@@ -229,6 +213,7 @@ public class CommandProcessor {
             e.printStackTrace();
         }
     }
+
 
     public String processUpGroupTag(String[] args, long userId, int src_group) {
         if (args.length == 1) {
@@ -257,6 +242,7 @@ public class CommandProcessor {
             e.printStackTrace();
         }
     }
+
 
     private long getUserAccessLevel(long userId) {
         try (Connection connection = commandHandler.getConnection();
@@ -296,6 +282,7 @@ public class CommandProcessor {
         }
     }
 
+
     private void resetGroup(long userToBeUpgradedId) {
         try (Connection connection = commandHandler.getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE \"tags\" SET src_group = 1 WHERE tg_tag = ?")) {
             statement.setLong(1, userToBeUpgradedId);
@@ -319,6 +306,7 @@ public class CommandProcessor {
             return "Неверный формат команды *dup. Используйте *reset_tag [user TAG]";
         }
     }
+
 
     private void resetGroupTag(String userToBeUpgradedId) {
         try (Connection connection = commandHandler.getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE \"tags\" SET src_group = 1 WHERE tg_tag = ?")) {
@@ -355,6 +343,7 @@ public class CommandProcessor {
         }
     }
 
+
     public String processDUpGroupTag(String[] args, int src_group) {
         if (args.length == 1) {
             String userToBeUpgradedTag = args[0]; // Тег пользователя теперь String
@@ -372,6 +361,7 @@ public class CommandProcessor {
             return "Неверный формат команды *dup. Используйте *dup_tag [user TAG]";
         }
     }
+
 
     public String processAddGoal(String[] args, int src_group) {
         if (args.length != 2){
@@ -468,9 +458,6 @@ public class CommandProcessor {
     }
 
 
-
-
-
     private int getUserAccessLevelId(long userTag) {
         try (Connection connection = commandHandler.getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT src_group FROM \"tags\" WHERE tg_id = ?")) {
@@ -488,6 +475,7 @@ public class CommandProcessor {
             return 0;
         }
     }
+
 
     private int getUserAccessLevelTag(String userTag) {
         try (Connection connection = commandHandler.getConnection();
@@ -507,6 +495,7 @@ public class CommandProcessor {
         }
     }
 
+
     private void dupgradeGroupTag(String userToBeUpgradedId) {
         try (Connection connection = commandHandler.getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE \"tags\" SET src_group = src_group - 1 WHERE tg_tag = ?")) {
             statement.setString(1, userToBeUpgradedId);
@@ -515,6 +504,7 @@ public class CommandProcessor {
             e.printStackTrace();
         }
     }
+
 
     private void dupgradeGroup(long userToBeUpgradedId) {
         try (Connection connection = commandHandler.getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE \"tags\" SET src_group = src_group - 1 WHERE tg_id = ?")) {
@@ -525,10 +515,11 @@ public class CommandProcessor {
         }
     }
 
+
     public String processShowUser(int src_group) {
-//        if (src_group <= 1) {
-//            return "Недостаточно прав!";
-//        }
+        if (src_group == 1) {
+            return "Недостаточно прав!";
+        }
 
         StringBuilder userList = new StringBuilder("Список всех пользователей: \n\n");
 
