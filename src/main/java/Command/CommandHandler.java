@@ -39,8 +39,12 @@ public class CommandHandler {
                 return commandProcessor.processResetGroupTag(args, userId, src_group);
             case "*bosses":
                 return commandProcessor.processBossList();
+            case "*del_goal":
+                return commandProcessor.processDelGoal(args, src_group);
             case "*add_goal":
                 return commandProcessor.processAddGoal(args, src_group);
+            case "*del_assist":
+                return commandProcessor.processDelAssist(args, src_group);
             case "*add_assist":
                 return commandProcessor.processAddAssist(args, src_group);
             case "*stats":
