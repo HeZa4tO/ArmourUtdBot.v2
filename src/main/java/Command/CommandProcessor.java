@@ -407,6 +407,9 @@ public class CommandProcessor {
 
         try {
             goals = Integer.parseInt(args[1]);
+            if (goals < 0) {
+                return "⚠️Количество голов не может быть отрицательным.";
+            }
         } catch (NumberFormatException e) {
             return "⚠️Некорректное значение голов. Введите число.";
         }
@@ -415,21 +418,37 @@ public class CommandProcessor {
             return "⚠️Недостаточно прав для выполнения операции.";
         }
 
-        try (Connection connection = commandHandler.getConnection();
-             PreparedStatement updateGoalStatement = connection.prepareStatement(
-                     "UPDATE stats SET goal = goal - ? WHERE user_tag = ?")) {
-            updateGoalStatement.setInt(1, goals);
-            updateGoalStatement.setString(2, tag);
-            int rowsUpdated = updateGoalStatement.executeUpdate();
-            if (rowsUpdated > 0) {
-                return "✅ Количество голов пользователя обновлено.";
-            } else {
-                return "⚠️ Пользователь не найден в базе данных.";
+        try (Connection connection = commandHandler.getConnection()) {
+            // Сначала получаем текущее количество голов
+            try (PreparedStatement selectStmt = connection.prepareStatement(
+                    "SELECT goal FROM stats WHERE user_tag = ?")) {
+                selectStmt.setString(1, tag);
+                ResultSet rs = selectStmt.executeQuery();
+
+                if (rs.next()) {
+                    int currentGoals = rs.getInt("goal");
+                    if (currentGoals < goals) {
+                        return "⚠️ Нельзя вычесть больше голов, чем есть у пользователя (" + currentGoals + ").";
+                    }
+                } else {
+                    return "⚠️ Пользователь не найден в базе данных.";
+                }
             }
+
+            // Если всё ок — обновляем
+            try (PreparedStatement updateStmt = connection.prepareStatement(
+                    "UPDATE stats SET goal = goal - ? WHERE user_tag = ?")) {
+                updateStmt.setInt(1, goals);
+                updateStmt.setString(2, tag);
+                updateStmt.executeUpdate();
+            }
+
+            return "✅ Количество голов пользователя обновлено.";
         } catch (SQLException e) {
             return "Ошибка при обновлении пользователя: " + e.getMessage();
         }
     }
+
 
 
     public String processAddAssist(String[] args, int src_group) {
@@ -472,10 +491,13 @@ public class CommandProcessor {
         }
 
         String tag = args[0];
-        int goals;
+        int assists;
 
         try {
-            goals = Integer.parseInt(args[1]);
+            assists = Integer.parseInt(args[1]);
+            if (assists < 0) {
+                return "⚠️Количество ассистов не может быть отрицательным.";
+            }
         } catch (NumberFormatException e) {
             return "⚠️Некорректное значение ассистов. Введите число.";
         }
@@ -484,21 +506,38 @@ public class CommandProcessor {
             return "⚠️Недостаточно прав для выполнения операции.";
         }
 
-        try (Connection connection = commandHandler.getConnection();
-             PreparedStatement updateGoalStatement = connection.prepareStatement(
-                     "UPDATE stats SET assist = assist - ? WHERE user_tag = ?")) {
-            updateGoalStatement.setInt(1, goals);
-            updateGoalStatement.setString(2, tag);
-            int rowsUpdated = updateGoalStatement.executeUpdate();
-            if (rowsUpdated > 0) {
-                return "✅ Количество ассистов пользователя обновлено.";
-            } else {
-                return "⚠️ Пользователь не найден в базе данных.";
+        try (Connection connection = commandHandler.getConnection()) {
+            // Сначала получаем текущее количество ассистов
+            try (PreparedStatement selectStmt = connection.prepareStatement(
+                    "SELECT assist FROM stats WHERE user_tag = ?")) {
+                selectStmt.setString(1, tag);
+                ResultSet rs = selectStmt.executeQuery();
+
+                if (rs.next()) {
+                    int currentAssists = rs.getInt("assist");
+                    if (currentAssists < assists) {
+                        return "⚠️ Нельзя вычесть больше ассистов, чем есть у пользователя (" + currentAssists + ").";
+                    }
+                } else {
+                    return "⚠️ Пользователь не найден в базе данных.";
+                }
             }
+
+            // Если всё ок — обновляем
+            try (PreparedStatement updateStmt = connection.prepareStatement(
+                    "UPDATE stats SET assist = assist - ? WHERE user_tag = ?")) {
+                updateStmt.setInt(1, assists);
+                updateStmt.setString(2, tag);
+                updateStmt.executeUpdate();
+            }
+
+            return "✅ Количество ассистов пользователя обновлено.";
         } catch (SQLException e) {
             return "Ошибка при обновлении пользователя: " + e.getMessage();
         }
     }
+
+
 
 
     public String getPlayerStats() {
